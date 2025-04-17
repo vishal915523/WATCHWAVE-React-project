@@ -8,8 +8,10 @@ import { useToast } from "../context/ToastContext";
 import styled from "styled-components";
 
 export default function Signup() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -29,10 +31,20 @@ export default function Signup() {
     }
   }, [error, toast, clearError]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     
     if (isSubmitting) return;
+    
+    const { email, password } = formData;
     
     if (!email || !password) {
       toast.error("Please enter both email and password");
@@ -67,18 +79,20 @@ export default function Signup() {
               <div className="input-container">
                 <input
                   type="email"
+                  name="email"
                   placeholder="Email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  value={email}
+                  onChange={handleInputChange}
+                  value={formData.email}
                   required
                 />
               </div>
               <div className="input-container">
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   placeholder="Password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  value={password}
+                  onChange={handleInputChange}
+                  value={formData.password}
                   required
                 />
                 <button 

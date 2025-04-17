@@ -8,8 +8,10 @@ import { useToast } from "../context/ToastContext";
 import styled from "styled-components";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { login, currentUser, error, clearError } = useAuth();
@@ -30,10 +32,20 @@ function Login() {
     }
   }, [error, toast, clearError]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     
     if (isSubmitting) return; // Prevent multiple submissions
+    
+    const { email, password } = formData;
     
     if (!email || !password) {
       toast.error("Please enter both email and password");
@@ -65,18 +77,20 @@ function Login() {
               <div className="input-container">
                 <input
                   type="email"
+                  name="email"
                   placeholder="Email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  value={email}
+                  onChange={handleInputChange}
+                  value={formData.email}
                   required
                 />
               </div>
               <div className="input-container">
                 <input
                   type="password"
+                  name="password"
                   placeholder="Password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  value={password}
+                  onChange={handleInputChange}
+                  value={formData.password}
                   required
                 />
               </div>

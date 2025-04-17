@@ -52,14 +52,12 @@ export const AuthProvider = ({ children }) => {
       
       const { token, user } = response.data;
       
-      // Store in localStorage
+      // Store in localStorage and set auth headers in one operation
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
-      // Set auth token for future requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Set current user
+      // Single state update
       setCurrentUser(user);
       
       return user;
@@ -81,14 +79,12 @@ export const AuthProvider = ({ children }) => {
       
       const { token, user } = response.data;
       
-      // Store in localStorage
+      // Store in localStorage and set auth headers in one operation
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
-      // Set auth token for future requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Set current user
+      // Single state update
       setCurrentUser(user);
       
       return user;
