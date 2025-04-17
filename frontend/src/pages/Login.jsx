@@ -1,33 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
-import { firebaseAuth } from "../utils/firebase-config";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import Footer from '../Footer/Footer';
-import {  toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { login, currentUser, error } = useAuth();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+    
     try {
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
-      toast.success("Signin successful! Welcome aboard!");
-
+      await login(email, password);
+      toast.success("Sign in successful! Welcome aboard!");
     } catch (error) {
-      console.log(error.code);
-      toast.error("Signin failed. Please try again.");
-
+      // Error is already handled in the context
+      console.error("Login error:", error);
     }
   };
-
-  onAuthStateChanged(firebaseAuth, (currentUser) => {
-    if (currentUser) navigate("/");
-  });
 
   return (
     <div className="relative min-h-screen">
@@ -67,7 +78,6 @@ function Login() {
                 Sign up now.
               </Link>
               <br />
-
             </div>
           </div>
         </div>

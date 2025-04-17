@@ -1,46 +1,48 @@
 // import axios from "axios";
-import { onAuthStateChanged } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { firebaseAuth } from "../utils/firebase-config";
 import Card from "../components/Card";
 import styled from "styled-components";
 import Navbar from "../components/Navbar";
 import { getUsersLikedMovies } from "../store";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../context/AuthContext";
 
 export default function UserListedMovies() {
   const movies = useSelector((state) => state.WatchWave.movies);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [email, setEmail] = useState(undefined);
-
-  onAuthStateChanged(firebaseAuth, (currentUser) => {
-    // console.log("Inside onAuthStateChanged", currentUser);
-    if (currentUser) setEmail(currentUser.email);
-    else navigate("/login");
-  });
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    // console.log("Inside useEffect", email);
-    if (email) {
-      dispatch(getUsersLikedMovies(email));
+    if (!currentUser) {
+      navigate("/login");
+      return;
     }
-  }, [dispatch , email]);
 
-  window.onscroll = () => {
-    setIsScrolled(window.pageYOffset === 0 ? false : true);
-    return () => (window.onscroll = null);
-  };
+    dispatch(getUsersLikedMovies(currentUser.email));
+  }, [dispatch, currentUser, navigate]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.pageYOffset === 0 ? false : true);
+      return () => (window.onscroll = null);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <Container>
-      <Navbar isScrolled={isScrolled} email={email} />
+      <Navbar isScrolled={isScrolled} />
       <div className="content flex column">
         <h1>My List</h1>
         <div className="grid flex">
-          {movies && movies.length > 0  ? (
+          {movies && movies.length > 0 ? (
             movies.map((movie, index) => (
               <Card
                 movieData={movie}

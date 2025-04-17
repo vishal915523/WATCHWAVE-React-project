@@ -1,19 +1,26 @@
-import { signOut } from "firebase/auth";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import logo from "../assets/logo.png";
-import { firebaseAuth } from "../utils/firebase-config";
 import { FaPowerOff, FaSearch } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
+
 export default function Navbar(props) {
   const [showSearch, setShowSearch] = useState(false);
   const [inputHover, setInputHover] = useState(false);
+  const { logout, currentUser, isAdmin } = useAuth();
+  
   const links = [
     { name: "Home", link: "/" },
     { name: "TV Shows", link: "/tv" },
     { name: "Movies", link: "/movies" },
     { name: "My List", link: "/mylist" },
   ];
+
+  // Add admin link if user is admin
+  if (isAdmin()) {
+    links.push({ name: "Admin", link: "/admin" });
+  }
 
   return (
     <Container>
@@ -33,7 +40,7 @@ export default function Navbar(props) {
           </ul>
         </div>
         <div className="right flex a-center">
-        <span>{props.email}</span>
+          <span>{currentUser?.email}</span>
 
           <div className={`search ${showSearch ? "show-search" : ""}`}>
             <button
@@ -58,7 +65,7 @@ export default function Navbar(props) {
             />
           </div>
 
-          <button onClick={() => signOut(firebaseAuth)}>
+          <button onClick={logout}>
             <FaPowerOff />
           </button>
         </div>

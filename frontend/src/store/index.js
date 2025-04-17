@@ -14,6 +14,9 @@ const initialState = {
   genres: [],
 };
 
+// Local backend API URL
+const API_URL = "http://localhost:5000/api/user";
+
 export const getGenres = createAsyncThunk("WatchWave/genres", async () => {
   const {
     data: { genres },
@@ -81,27 +84,39 @@ export const fetchMovies = createAsyncThunk(
 export const getUsersLikedMovies = createAsyncThunk(
   "WatchWave/getLiked",
   async (email) => {
-    const {
-      data: { movies },
-    } = await axios.get(`https://helpful-red-jackrabbit.cyclic.app/api/user/liked/${email}`);
-    if(movies)
-     return movies;
-    else 
-    return null;
+    try {
+      const {
+        data: { movies },
+      } = await axios.get(`${API_URL}/liked/${email}`);
+      if(movies)
+        return movies;
+      else 
+        return [];
+    } catch (error) {
+      console.error("Error fetching liked movies:", error);
+      toast.error("Error fetching liked movies");
+      return [];
+    }
   }
 );
 
 export const removeMovieFromLiked = createAsyncThunk(
   "WatchWave/deleteLiked",
-  async ({ movieId,movieName, email }) => {
-    const {
-      data: { movies },
-    } = await axios.put("https://helpful-red-jackrabbit.cyclic.app/api/user/remove", {
-      email,
-      movieId,
-    });
-    toast.success(`${movieName} removed from the liked list.`);
-    return movies;
+  async ({ movieId, movieName, email }) => {
+    try {
+      const {
+        data: { movies },
+      } = await axios.put(`${API_URL}/remove`, {
+        email,
+        movieId,
+      });
+      toast.success(`${movieName} removed from the liked list.`);
+      return movies || [];
+    } catch (error) {
+      console.error("Error removing movie:", error);
+      toast.error("Error removing movie from the liked list");
+      return [];
+    }
   }
 );
 

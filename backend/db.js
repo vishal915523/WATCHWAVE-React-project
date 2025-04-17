@@ -1,19 +1,17 @@
 const mongoose = require("mongoose");
 
- exports.Database= function Database() {
+exports.Database = function Database() {
     mongoose.set('strictQuery', false);
     mongoose
-      .connect("mongodb://", {
+      .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/watchwave", {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       })
-
-
       .then(() => {
-        console.log("DB Connetion Successfull");
+        console.log("DB Connection Successful");
       })
       .catch((err) => {
-        console.log(err.message);
+        console.error("DB Connection Error:", err.message);
       });
 }
  

@@ -1,84 +1,95 @@
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { firebaseAuth } from "../utils/firebase-config";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import Footer from "../Footer/Footer";
-// import Developers from "../components/Developers";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const { register, currentUser, error } = useAuth();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleSignUp = async () => {
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    
     try {
-      await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      await register(email, password);
       toast.success("Signup successful! Welcome aboard!");
     } catch (error) {
-      console.error(error.code, error.message);
-      let errorMessage = "Signup failed. Please try again.";
-      // Customize error message based on error code if needed
-      toast.error(errorMessage);
+      // Error is already handled in the context
+      console.error("Signup error:", error);
     }
   };
 
   return (
-    <>
+    <div className="relative min-h-screen">
       <BackgroundImage />
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="content absolute inset-0 z-10 bg-gray-900 bg-opacity-50">
-          <Header login={"login"} />
-          <main className="body flex flex-col items-center justify-center">
-            <div className="text text-center">
-              <h1 className="text-4xl font-bold mb-4 text-white">
-                Unlimited movies, TV shows and more.
-              </h1>
-              <h4 className="text-2xl mb-4 text-white">Watch anywhere. Cancel anytime.</h4>
-              <h6 className="text-xl mb-8 text-white">
-                Ready to watch? Enter your email to create or restart membership.
-              </h6>
-            </div>
-            <div className="form w-full max-w-md">
+      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex flex-col justify-between">
+        <Header login />
+        <div className="flex flex-col items-center justify-center h-full px-4 md:px-0">
+          <div className="bg-black bg-opacity-70 w-full max-w-xl rounded-lg p-8">
+            <div className="text-white text-2xl font-bold mb-6">Sign Up</div>
+            <div className="flex flex-col gap-4">
               <input
                 type="email"
-                placeholder="Email address"
+                placeholder="Email"
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
-                className="block w-full p-4 mb-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-900 bg-opacity-50"
+                className="px-4 py-2 rounded-lg text-stone-950"
+                required
               />
-              {showPassword && (
+              <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   onChange={(e) => setPassword(e.target.value)}
                   value={password}
-                  className="block w-full p-4 mb-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-900 bg-opacity-50"
+                  className="px-4 py-2 rounded-lg w-full text-stone-950"
+                  required
                 />
-              )}
-              {!showPassword && (
                 <button
-                  onClick={() => setShowPassword(true)}
-                  className="block w-full p-4 mb-4 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-blue-500 focus:border-blue-500"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-stone-950"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  Show Password
+                  {showPassword ? "Hide" : "Show"}
                 </button>
-              )}
-              {showPassword && (
-                <button
-                  onClick={handleSignUp}
-                  className="block w-full p-4 mb-4 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  Sign Up
-                </button>
-              )}
+              </div>
+              <button
+                onClick={handleSignUp}
+                className="px-4 py-2 bg-red-600 rounded-lg cursor-pointer text-white font-bold"
+              >
+                Sign Up
+              </button>
             </div>
-          </main>
+          </div>
         </div>
         <Footer />
       </div>
-    </>
+    </div>
   );
 }
