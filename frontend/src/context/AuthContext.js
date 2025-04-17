@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -11,32 +11,38 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // Check if user is already logged in (from localStorage)
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (user && token) {
-      setCurrentUser(JSON.parse(user));
-    }
-    
-    setLoading(false);
+    const initAuth = () => {
+      try {
+        const user = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        
+        if (user && token) {
+          setCurrentUser(JSON.parse(user));
+          // Set auth token for axios requests
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+          delete axios.defaults.headers.common['Authorization'];
+        }
+        
+        setIsAuthReady(true);
+      } catch (err) {
+        console.error("Auth initialization error:", err);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
-  // Set auth token for axios requests
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  }, [currentUser]);
-
   // Register user
-  const register = async (email, password) => {
+  const register = useCallback(async (email, password) => {
     try {
       setError(null);
       const response = await axios.post(`${API_URL}/register`, {
@@ -50,18 +56,22 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
+      // Set auth token for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       // Set current user
       setCurrentUser(user);
       
       return user;
     } catch (error) {
-      setError(error.response?.data?.msg || 'Registration failed');
+      const errorMessage = error.response?.data?.msg || 'Registration failed';
+      setError(errorMessage);
       throw error;
     }
-  };
+  }, []);
 
   // Login user
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       setError(null);
       const response = await axios.post(`${API_URL}/login`, {
@@ -75,18 +85,22 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
+      // Set auth token for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       // Set current user
       setCurrentUser(user);
       
       return user;
     } catch (error) {
-      setError(error.response?.data?.msg || 'Login failed');
+      const errorMessage = error.response?.data?.msg || 'Login failed';
+      setError(errorMessage);
       throw error;
     }
-  };
+  }, []);
 
   // Logout user
-  const logout = () => {
+  const logout = useCallback(() => {
     // Clear localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -96,21 +110,27 @@ export const AuthProvider = ({ children }) => {
     
     // Clear axios auth header
     delete axios.defaults.headers.common['Authorization'];
-  };
+  }, []);
 
   // Check if user is admin
-  const isAdmin = () => {
+  const isAdmin = useCallback(() => {
     return currentUser?.isAdmin === true;
-  };
+  }, [currentUser]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   const value = {
     currentUser,
     loading,
     error,
+    isAuthReady,
     register,
     login,
     logout,
-    isAdmin
+    isAdmin,
+    clearError
   };
 
   return (

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import Footer from "../Footer/Footer";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import styled from "styled-components";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { register, currentUser, error } = useAuth();
+  const { register, currentUser, error, clearError } = useAuth();
   const toast = useToast();
 
   useEffect(() => {
@@ -23,10 +25,15 @@ export default function Signup() {
   useEffect(() => {
     if (error) {
       toast.error(error);
+      clearError();
     }
-  }, [error, toast]);
+  }, [error, toast, clearError]);
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
     if (!email || !password) {
       toast.error("Please enter both email and password");
       return;
@@ -38,58 +45,208 @@ export default function Signup() {
     }
     
     try {
+      setIsSubmitting(true);
       await register(email, password);
       toast.success("Signup successful! Welcome aboard!");
     } catch (error) {
-      // Error is already handled in the context
       console.error("Signup error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen">
+    <Container>
       <BackgroundImage />
-      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex flex-col justify-between">
-        <Header login />
-        <div className="flex flex-col items-center justify-center h-full px-4 md:px-0">
-          <div className="bg-black bg-opacity-70 w-full max-w-xl rounded-lg p-8">
-            <div className="text-white text-2xl font-bold mb-6">Sign Up</div>
-            <div className="flex flex-col gap-4">
-              <input
-                type="email"
-                placeholder="Email"
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-                className="px-4 py-2 rounded-lg text-stone-950"
-                required
-              />
-              <div className="relative">
+      <div className="content">
+        <Header />
+        <div className="form-container">
+          <div className="form-wrapper">
+            <h1>Sign Up</h1>
+            <form onSubmit={handleSignUp}>
+              <div className="input-container">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  onChange={(e) => setEmail(e.target.value)}
+                  value={email}
+                  required
+                />
+              </div>
+              <div className="input-container">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   onChange={(e) => setPassword(e.target.value)}
                   value={password}
-                  className="px-4 py-2 rounded-lg w-full text-stone-950"
                   required
                 />
-                <button
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-stone-950"
+                <button 
+                  type="button" 
+                  className="toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
-              <button
-                onClick={handleSignUp}
-                className="px-4 py-2 bg-red-600 rounded-lg cursor-pointer text-white font-bold"
-              >
-                Sign Up
+              <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Signing up..." : "Sign Up"}
               </button>
+            </form>
+            <div className="form-footer">
+              <p>
+                Already have an account? <Link to="/login">Sign in</Link>
+              </p>
+              <small>
+                By signing up, you agree to our Terms of Use and Privacy Policy.
+              </small>
             </div>
           </div>
         </div>
         <Footer />
       </div>
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+
+  .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .form-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 0 1rem;
+  }
+
+  .form-wrapper {
+    background: rgba(0, 0, 0, 0.75);
+    max-width: 450px;
+    width: 100%;
+    padding: 60px 68px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+    @media (max-width: 768px) {
+      padding: 40px 30px;
+      max-width: 90%;
+    }
+
+    h1 {
+      color: white;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 28px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .input-container {
+      position: relative;
+      width: 100%;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 4px;
+      border: none;
+      background: #333;
+      color: white;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.2s ease;
+
+      &:focus {
+        background: #444;
+      }
+
+      &::placeholder {
+        color: #8c8c8c;
+      }
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #8c8c8c;
+      cursor: pointer;
+      font-size: 14px;
+      
+      &:hover {
+        color: white;
+      }
+    }
+
+    button[type="submit"] {
+      margin-top: 8px;
+      padding: 16px;
+      border-radius: 4px;
+      background: #e50914;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: #f40612;
+      }
+      
+      &:disabled {
+        background: #f4091280;
+        cursor: not-allowed;
+      }
+    }
+
+    .form-footer {
+      margin-top: 24px;
+      color: #737373;
+      font-size: 14px;
+
+      p {
+        margin-bottom: 16px;
+        color: #737373;
+      }
+
+      a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      small {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+    }
+  }
+`;

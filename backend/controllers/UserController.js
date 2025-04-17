@@ -1,5 +1,6 @@
 const User = require("../models/UserModel");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -20,6 +21,15 @@ const generateToken = (user) => {
 module.exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required" });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ msg: "Password must be at least 6 characters" });
+    }
     
     // Check if email already exists
     const existingUser = await User.findOne({ email });
@@ -61,16 +71,21 @@ module.exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required" });
+    }
+    
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ msg: "User not found" });
+      return res.status(401).json({ msg: "Invalid email or password" });
     }
     
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ msg: "Invalid password" });
+    // Check password - manually compare for better debugging
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ msg: "Invalid email or password" });
     }
     
     // Generate token

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 
 // Create toast context
@@ -10,32 +10,35 @@ export const useToast = () => useContext(ToastContext);
 // Toast provider component
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
+  const toastIdCounter = useRef(1);
 
-  // Function to add a toast
-  const addToast = (message, type = 'info', duration = 3000) => {
-    const id = Date.now();
+  // Function to add a toast - using useCallback to prevent recreation on each render
+  const addToast = useCallback((message, type = 'info', duration = 3000) => {
+    const id = toastIdCounter.current++;
     const newToast = { id, message, type, duration };
     
     setToasts(prev => [...prev, newToast]);
     
     // Auto remove toast after duration
-    setTimeout(() => {
-      removeToast(id);
-    }, duration);
+    if (duration !== 0) {
+      setTimeout(() => {
+        removeToast(id);
+      }, duration);
+    }
     
     return id;
-  };
+  }, []);
 
-  // Function to remove a toast
-  const removeToast = (id) => {
+  // Function to remove a toast - using useCallback to prevent recreation on each render
+  const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
+  }, []);
 
-  // Helper functions for different toast types
-  const success = (message, duration) => addToast(message, 'success', duration);
-  const error = (message, duration) => addToast(message, 'error', duration);
-  const info = (message, duration) => addToast(message, 'info', duration);
-  const warning = (message, duration) => addToast(message, 'warning', duration);
+  // Helper functions for different toast types - using useCallback to prevent recreation
+  const success = useCallback((message, duration) => addToast(message, 'success', duration), [addToast]);
+  const error = useCallback((message, duration) => addToast(message, 'error', duration), [addToast]);
+  const info = useCallback((message, duration) => addToast(message, 'info', duration), [addToast]);
+  const warning = useCallback((message, duration) => addToast(message, 'warning', duration), [addToast]);
 
   // The context value
   const value = {
