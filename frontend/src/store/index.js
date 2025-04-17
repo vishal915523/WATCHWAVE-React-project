@@ -5,14 +5,15 @@ import {
 } from "@reduxjs/toolkit";
 import axios from "axios";
 import { API_KEY, TMDB_BASE_URL } from "../utils/constants";
-import {  toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 // changes begin 
 const initialState = {
   movies: [],
   genresLoaded: false,
   genres: [],
 };
+
+// Local backend API URL
+const API_URL = "http://localhost:5001/api/user";
 
 export const getGenres = createAsyncThunk("WatchWave/genres", async () => {
   const {
@@ -81,27 +82,36 @@ export const fetchMovies = createAsyncThunk(
 export const getUsersLikedMovies = createAsyncThunk(
   "WatchWave/getLiked",
   async (email) => {
-    const {
-      data: { movies },
-    } = await axios.get(`https://helpful-red-jackrabbit.cyclic.app/api/user/liked/${email}`);
-    if(movies)
-     return movies;
-    else 
-    return null;
+    try {
+      const {
+        data: { movies },
+      } = await axios.get(`${API_URL}/liked/${email}`);
+      if(movies)
+        return movies;
+      else 
+        return [];
+    } catch (error) {
+      console.error("Error fetching liked movies:", error);
+      return [];
+    }
   }
 );
 
 export const removeMovieFromLiked = createAsyncThunk(
   "WatchWave/deleteLiked",
-  async ({ movieId,movieName, email }) => {
-    const {
-      data: { movies },
-    } = await axios.put("https://helpful-red-jackrabbit.cyclic.app/api/user/remove", {
-      email,
-      movieId,
-    });
-    toast.success(`${movieName} removed from the liked list.`);
-    return movies;
+  async ({ movieId, movieName, email }, { rejectWithValue }) => {
+    try {
+      const {
+        data: { movies },
+      } = await axios.put(`${API_URL}/remove`, {
+        email,
+        movieId,
+      });
+      return movies || [];
+    } catch (error) {
+      console.error("Error removing movie:", error);
+      return rejectWithValue(error.response?.data?.msg || 'Error removing movie');
+    }
   }
 );
 

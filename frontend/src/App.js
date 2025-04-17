@@ -8,21 +8,29 @@ import Signup from "./pages/Signup";
 import TVShows from "./pages/TVShows";
 import Info from "./pages/Info";
 import UserListedMovies from "./pages/UserListedMovies";
+import Admin from "./pages/Admin";
+import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route exact path="/login" element={<Login />} />
-        <Route exact path="/signup" element={<Signup />} />
-        <Route exact path="/player" element={<Player />} />
-        <Route exact path="/tv" element={<TVShows />} />
-        <Route exact path="/movies" element={<MoviePage />} />
-        <Route exact path="/info" element={<Info />} />
-        <Route exact path="/new" element={<Player />} />
-        <Route exact path="/mylist" element={<UserListedMovies />} />
-        <Route exact path="/"  element={<WatchWave />} />
-      </Routes>
-    </BrowserRouter>
+    <ToastProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route exact path="/login" element={<Login />} />
+            <Route exact path="/signup" element={<Signup />} />
+            <Route exact path="/player" element={<Player />} />
+            <Route exact path="/tv" element={<TVShows />} />
+            <Route exact path="/movies" element={<MoviePage />} />
+            <Route exact path="/info" element={<Info />} />
+            <Route exact path="/new" element={<Player />} />
+            <Route exact path="/mylist" element={<UserListedMovies />} />
+            <Route exact path="/admin" element={<Admin />} />
+            <Route exact path="/"  element={<WatchWave />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
