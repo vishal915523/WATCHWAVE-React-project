@@ -9,15 +9,15 @@ import { BsCheck } from "react-icons/bs";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { removeMovieFromLiked } from "../store";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default React.memo(function Card({ index, movieData, isLiked = false }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isHovered, setIsHovered] = useState(false);
   const { currentUser } = useAuth();
+  const toast = useToast();
 
   const addToList = async () => {
     try {
@@ -26,7 +26,7 @@ export default React.memo(function Card({ index, movieData, isLiked = false }) {
         return;
       }
   
-      await axios.post("http://localhost:3000/api/user/add", {
+      await axios.post("http://localhost:5001/api/user/add", {
         email: currentUser.email,
         data: movieData,
       });
@@ -36,6 +36,22 @@ export default React.memo(function Card({ index, movieData, isLiked = false }) {
       console.error(error);
       toast.error(`Error adding movie to the liked list: ${error.response?.data?.msg || 'Unknown error'}`);
     }
+  };
+
+  const handleRemoveFromList = () => {
+    dispatch(
+      removeMovieFromLiked({
+        movieId: movieData.id,
+        movieName: movieData.name,
+        email: currentUser.email,
+      })
+    ).then((result) => {
+      if (!result.error) {
+        toast.success(`${movieData.name} removed from the liked list.`);
+      } else {
+        toast.error(result.payload || 'Error removing movie');
+      }
+    });
   };
 
   return (
@@ -80,15 +96,7 @@ export default React.memo(function Card({ index, movieData, isLiked = false }) {
                 {isLiked ? (
                   <BsCheck
                     title="Remove from List"
-                    onClick={() =>
-                      dispatch(
-                        removeMovieFromLiked({
-                          movieId: movieData.id,
-                          movieName: movieData.name,
-                          email: currentUser.email,
-                        })
-                      )
-                    }
+                    onClick={handleRemoveFromList}
                   />
                 ) : (
                   <AiOutlinePlus title="Add to my list" onClick={addToList} />

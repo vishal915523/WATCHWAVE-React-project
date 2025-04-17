@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { useToast } from "../context/ToastContext";
 
 export default function Admin() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,6 +12,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { currentUser, isAdmin } = useAuth();
+  const toast = useToast();
 
   useEffect(() => {
     if (!currentUser) {
@@ -28,7 +29,7 @@ export default function Admin() {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/api/user/admin/users");
+        const response = await axios.get("http://localhost:5001/api/user/admin/users");
         setUsers(response.data.users);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -39,7 +40,7 @@ export default function Admin() {
     };
 
     fetchUsers();
-  }, [currentUser, navigate, isAdmin]);
+  }, [currentUser, navigate, isAdmin, toast]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,7 +56,7 @@ export default function Admin() {
   const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await axios.delete(`http://localhost:3000/api/user/admin/users/${userId}`);
+        await axios.delete(`http://localhost:5001/api/user/admin/users/${userId}`);
         setUsers(users.filter(user => user._id !== userId));
         toast.success("User deleted successfully");
       } catch (error) {

@@ -3,15 +3,15 @@ import { useNavigate, Link } from "react-router-dom";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import Footer from '../Footer/Footer';
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { login, currentUser, error } = useAuth();
+  const toast = useToast();
 
   useEffect(() => {
     if (currentUser) {
@@ -23,7 +23,7 @@ function Login() {
     if (error) {
       toast.error(error);
     }
-  }, [error]);
+  }, [error, toast]);
 
   const handleLogin = async () => {
     if (!email || !password) {

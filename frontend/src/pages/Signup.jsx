@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import Footer from "../Footer/Footer";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -13,6 +12,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { register, currentUser, error } = useAuth();
+  const toast = useToast();
 
   useEffect(() => {
     if (currentUser) {
@@ -24,7 +24,7 @@ export default function Signup() {
     if (error) {
       toast.error(error);
     }
-  }, [error]);
+  }, [error, toast]);
 
   const handleSignUp = async () => {
     if (!email || !password) {

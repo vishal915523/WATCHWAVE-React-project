@@ -5,8 +5,6 @@ import {
 } from "@reduxjs/toolkit";
 import axios from "axios";
 import { API_KEY, TMDB_BASE_URL } from "../utils/constants";
-import {  toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 // changes begin 
 const initialState = {
   movies: [],
@@ -15,7 +13,7 @@ const initialState = {
 };
 
 // Local backend API URL
-const API_URL = "http://localhost:3000/api/user";
+const API_URL = "http://localhost:5001/api/user";
 
 export const getGenres = createAsyncThunk("WatchWave/genres", async () => {
   const {
@@ -94,7 +92,6 @@ export const getUsersLikedMovies = createAsyncThunk(
         return [];
     } catch (error) {
       console.error("Error fetching liked movies:", error);
-      toast.error("Error fetching liked movies");
       return [];
     }
   }
@@ -102,7 +99,7 @@ export const getUsersLikedMovies = createAsyncThunk(
 
 export const removeMovieFromLiked = createAsyncThunk(
   "WatchWave/deleteLiked",
-  async ({ movieId, movieName, email }) => {
+  async ({ movieId, movieName, email }, { rejectWithValue }) => {
     try {
       const {
         data: { movies },
@@ -110,12 +107,10 @@ export const removeMovieFromLiked = createAsyncThunk(
         email,
         movieId,
       });
-      toast.success(`${movieName} removed from the liked list.`);
       return movies || [];
     } catch (error) {
       console.error("Error removing movie:", error);
-      toast.error("Error removing movie from the liked list");
-      return [];
+      return rejectWithValue(error.response?.data?.msg || 'Error removing movie');
     }
   }
 );
