@@ -15,7 +15,7 @@ const initialState = {
 };
 
 // Local backend API URL
-const API_URL = "http://localhost:5000/api/user";
+const API_URL = "http://localhost:3000/api/user";
 
 export const getGenres = createAsyncThunk("WatchWave/genres", async () => {
   const {
